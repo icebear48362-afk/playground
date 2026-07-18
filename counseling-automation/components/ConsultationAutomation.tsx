@@ -83,6 +83,13 @@ export function ConsultationAutomation() {
 
       {results.length > 0 && (
         <section className="flex flex-col gap-5">
+          {results.some((r) => r.isMock) && (
+            <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              OPENAI_API_KEY가 설정되지 않아 실제 분석 대신 예시 데이터를
+              보여주고 있습니다. 실제 분석을 사용하려면 .env.local에 키를
+              추가해주세요.
+            </p>
+          )}
           {results.map((result) => (
             <ResultCard key={result.id} result={result} />
           ))}

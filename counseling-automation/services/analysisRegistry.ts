@@ -2,6 +2,7 @@ import { buildCounselingPrompt } from "@/prompts/counselingPrompt";
 import { buildPaymentPrompt } from "@/prompts/paymentPrompt";
 import { renderCounselingTemplate } from "@/templates/counselingTemplate";
 import { renderPaymentTemplate } from "@/templates/paymentTemplate";
+import { counselingMockData, paymentMockData } from "@/services/mockData";
 import type { AnalysisTask } from "@/types/analysis";
 
 /**
@@ -20,11 +21,13 @@ export const analysisTasks: AnalysisTask<any>[] = [
     label: "상담로그",
     buildPrompt: buildCounselingPrompt,
     render: renderCounselingTemplate,
+    mockData: counselingMockData,
   },
   {
     id: "paymentLog",
     label: "결제자 로그",
     buildPrompt: buildPaymentPrompt,
     render: renderPaymentTemplate,
+    mockData: paymentMockData,
   },
 ];
