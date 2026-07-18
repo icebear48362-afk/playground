@@ -1,5 +1,5 @@
 import { analysisTasks } from "@/services/analysisRegistry";
-import { extractStructuredData } from "@/services/claudeService";
+import { extractStructuredData } from "@/services/openaiService";
 import type { AnalysisResult } from "@/types/analysis";
 
 /**

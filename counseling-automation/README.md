@@ -1,13 +1,13 @@
 # 상담 자동화
 
-Clova Note에서 다운로드한 상담 스크립트(txt)를 업로드하면 Claude가 상담 내용을
+Clova Note에서 다운로드한 상담 스크립트(txt)를 업로드하면 GPT가 상담 내용을
 분석해 **상담로그**와 **결제자 로그**를 자동 생성하는 웹 서비스입니다.
 
 ## 시작하기
 
 ```bash
 npm install
-cp .env.local.example .env.local   # ANTHROPIC_API_KEY 입력
+cp .env.local.example .env.local   # OPENAI_API_KEY 입력
 npm run dev
 ```
 
@@ -18,12 +18,12 @@ http://localhost:3000 에서 확인할 수 있습니다.
 ```
 app/          페이지, API 라우트(app/api/analyze)
 components/   UI 컴포넌트
-services/     분석 오케스트레이션, Claude 호출 로직
+services/     분석 오케스트레이션, GPT 호출 로직
 prompts/      AI 프롬프트 (결과물별로 분리)
 templates/    결과물 텍스트 양식 (결과물별로 분리)
 types/        공유 타입
 utils/        범용 유틸 (클립보드 등)
-lib/          외부 클라이언트 초기화 (Anthropic)
+lib/          외부 클라이언트 초기화 (OpenAI)
 ```
 
 ## 결과물 양식/프롬프트 수정하기
@@ -47,5 +47,5 @@ lib/          외부 클라이언트 초기화 (Anthropic)
 
 - 음성 파일 업로드 + Whisper/Clova Speech 연동 (`app/api/`에 별도 라우트 추가)
 - Notion 자동 저장 (`services/`에 별도 서비스 추가)
-- 모델 교체는 `lib/anthropic.ts`의 `ANTHROPIC_MODEL` 또는 `.env.local`만 수정
+- 모델 교체는 `lib/openai.ts`의 `OPENAI_MODEL` 또는 `.env.local`만 수정
 - 상담 유형별 프롬프트는 `prompts/` + `services/analysisRegistry.ts`에 추가
