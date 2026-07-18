@@ -7,7 +7,7 @@ export interface AnalysisTask<T> {
   label: string;
   buildPrompt: (transcript: string) => string;
   render: (data: T) => string;
-  /** OPENAI_API_KEY가 없을 때 실제 호출 대신 보여줄 예시 데이터 */
+  /** ANTHROPIC_API_KEY가 없을 때 실제 호출 대신 보여줄 예시 데이터 */
   mockData: T;
 }
 
