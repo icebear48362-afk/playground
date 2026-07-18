@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>파티클 플레이그라운드</title>
+<style>
+  :root {
+    --bg: #0c0d12;
+    --panel: rgba(20, 21, 28, 0.75);
+    --ink: #f0eee6;
+    --muted: #9a97a8;
+    --border: rgba(255,255,255,0.1);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif;
+    color: var(--ink);
+  }
+  canvas {
+    display: block;
+    touch-action: none;
+  }
+  .panel {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-size: 0.8rem;
+    max-width: 220px;
+  }
+  .panel h1 {
+    font-size: 0.85rem;
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .row label { color: var(--muted); font-size: 0.75rem; }
+  .swatches { display: flex; gap: 6px; margin-bottom: 8px; }
+  .swatch {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .swatch.active { border-color: white; }
+  button.clear {
+    width: 100%;
+    margin-top: 6px;
+    padding: 7px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.06);
+    color: var(--ink);
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  button.clear:hover { background: rgba(255,255,255,0.12); }
+  .hint {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-align: center;
+    pointer-events: none;
+  }
+  input[type=range] { width: 100px; accent-color: #e07a5f; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="panel">
+  <h1>✨ 파티클 플레이그라운드</h1>
+  <div class="swatches" id="swatches"></div>
+  <div class="row">
+    <label>크기</label>
+    <input type="range" id="sizeRange" min="1" max="8" value="3" step="0.5">
+  </div>
+  <div class="row">
+    <label>중력</label>
+    <input type="range" id="gravRange" min="0" max="10" value="0" step="1">
+  </div>
+  <button class="clear" id="clearBtn">전체 지우기</button>
+</div>
+<div class="hint">마우스/터치로 드래그해서 그려보세요</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  function resize() {
+    W = canvas.width = innerWidth * devicePixelRatio;
+    H = canvas.height = innerHeight * devicePixelRatio;
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  const palette = ['#e07a5f', '#f4a58a', '#81b29a', '#3d5a80', '#f2cc8f', '#e0e0e0'];
+  let colorIndex = 0;
+  const swatchesEl = document.getElementById('swatches');
+  palette.forEach((c, i) => {
+    const s = document.createElement('div');
+    s.className = 'swatch' + (i === 0 ? ' active' : '');
+    s.style.background = c;
+    s.addEventListener('click', () => {
+      colorIndex = i;
+      document.querySelectorAll('.swatch').forEach(el => el.classList.remove('active'));
+      s.classList.add('active');
+    });
+    swatchesEl.appendChild(s);
+  });
+
+  const sizeRange = document.getElementById('sizeRange');
+  const gravRange = document.getElementById('gravRange');
+  document.getElementById('clearBtn').addEventListener('click', () => { particles.length = 0; });
+
+  let particles = [];
+  const MAX_PARTICLES = 2200;
+
+  function spawn(x, y, vx, vy) {
+    const baseSize = parseFloat(sizeRange.value);
+    particles.push({
+      x, y,
+      vx: vx + (Math.random() - 0.5) * 1.5,
+      vy: vy + (Math.random() - 0.5) * 1.5,
+      r: baseSize + Math.random() * baseSize,
+      life: 1,
+      decay: 0.004 + Math.random() * 0.006,
+      color: palette[colorIndex]
+    });
+    if (particles.length > MAX_PARTICLES) particles.splice(0, particles.length - MAX_PARTICLES);
+  }
+
+  let pointerDown = false;
+  let lastX = 0, lastY = 0;
+
+  function pointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+  }
+
+  function onDown(e) {
+    pointerDown = true;
+    const p = pointerPos(e);
+    lastX = p.x; lastY = p.y;
+  }
+  function onMove(e) {
+    if (!pointerDown) return;
+    e.preventDefault();
+    const p = pointerPos(e);
+    const dx = p.x - lastX, dy = p.y - lastY;
+    const steps = Math.max(1, Math.floor(Math.hypot(dx, dy) / 4));
+    for (let i = 0; i < steps; i++) {
+      const t = i / steps;
+      spawn(lastX + dx * t, lastY + dy * t, dx * 0.15, dy * 0.15);
+    }
+    lastX = p.x; lastY = p.y;
+  }
+  function onUp() { pointerDown = false; }
+
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('mousemove', onMove);
+  addEventListener('mouseup', onUp);
+  canvas.addEventListener('touchstart', onDown, { passive: true });
+  canvas.addEventListener('touchmove', onMove, { passive: false });
+  canvas.addEventListener('touchend', onUp);
+
+  function frame() {
+    ctx.fillStyle = 'rgba(12, 13, 18, 0.18)';
+    ctx.fillRect(0, 0, innerWidth, innerHeight);
+
+    const g = parseFloat(gravRange.value) * 0.02;
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.vy += g;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.99;
+      p.vy *= 0.99;
+      p.life -= p.decay;
+      if (p.life <= 0 || p.x < -50 || p.x > innerWidth + 50 || p.y > innerHeight + 50) {
+        particles.splice(i, 1);
+        continue;
+      }
+      ctx.globalAlpha = Math.max(p.life, 0);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>
